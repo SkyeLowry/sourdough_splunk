@@ -4,7 +4,8 @@
 
 ENV_FILE_DIR=../.env
 
-if [ -f $ENV_FILE_DIR ] then
+if [ -f $ENV_FILE_DIR ] 
+then
   export $(cat $ENV_FILE_DIR | sed 's/#.*//g' | xargs)
 fi
 
@@ -79,9 +80,9 @@ while true; do
     
     aws s3 cp $ORIGINAL_DIR $S3_BUCKET/$FOLDER_NAME/$FNAME.jpg
 
-    source venv/bin/activate
+    source env/bin/activate
 
-    python venv/examine_single_file.py $PWD/$FOLDER_NAME/$FNAME.jpg
+    python env/examine_single_file.py $PWD/$FOLDER_NAME/$FNAME.jpg
 
     echo "Python closed."
 
