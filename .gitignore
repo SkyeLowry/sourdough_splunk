@@ -1,0 +1,12 @@
+# Logs
+sourdough_results.log
+
+# Images
+src/imgs/*
+
+# Env
+.env
+
+# Virtual env
+venv
+*__pycache__
