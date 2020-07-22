@@ -10,3 +10,5 @@ src/imgs/*
 # Virtual env
 env
 *__pycache__
+
+.DS_Store
