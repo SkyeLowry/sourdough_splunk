@@ -8,5 +8,5 @@ src/imgs/*
 .env
 
 # Virtual env
-venv
+env
 *__pycache__
