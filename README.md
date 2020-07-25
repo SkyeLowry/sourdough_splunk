@@ -1,27 +1,31 @@
-# sourdough_splunk
+# Sourdough Splunk Project
 An image processor that uses a Raspberry Pi to monitor a sourdough starter in Splunk
 
 ## Requirements
-- Python & pip ([instruction](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#linux-and-macos))
+- Python & pip (click [here](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#installing-pip) for instructions)
+
+- `.env` file
+  - Create `.env` file using `.env.example` and locate it at the root of the directory
+  - Please ensure to add all required variables before running scripts
 
 ## Setup 
-- Python Virtualenv
+### Mandatory Setup
+- Python Virtual Environment
   - Click [here](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#installing-virtualenv) and follow instructions from `Installing virtualenv` and `Creating a virtual environment`
-  Note: Make sure the virtualenv folder name is `~/src/env` as seen in the official Python instruction
+  Note: Make sure the virtualenv folder name is `env` inside `./src` folder as seen in the official Python instruction
 
 - Raspberry Pi
 
 - Splunk Universal Forwarder
 
-- IFTTT 
+### Optional setup
+- [IFTTT](https://ifttt.com/)
 
-    Note: You can use any other API webhook to control background light
+  IFTTT was used to automatically turn on a light source when Rasberry Pi takes a photo of sourdough and then turn it back off. You may use any other API webhook to control background light or skip this step.
 
-- AWS S3
+- [AWS S3](https://aws.amazon.com/s3/)
 
-- `.env`
-  - Create `.env` file using `.env.example` and locate it at the root of the directory
-  - Please ensure to add all required variables before running scripts
+  AWS S3 was used to store sourdough images and show them in the Splunk dashboard.
 
 ## How to run scripts
 1. Go to `src` directory
@@ -34,7 +38,7 @@ source env/bin/activate
 pip3 install -r requirements.txt
 ```
 
-Run the following script
+4. Run the following script (**dot** required before `run_sourdough_monitor.sh`)
 ```
 . run_sourdough_monitor.sh
 ```
