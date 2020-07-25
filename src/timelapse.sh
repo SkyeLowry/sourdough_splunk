@@ -20,30 +20,8 @@ SLEEP_DELAY=$(($TOTAL_DELAY - $CAM_DELAY))
 
 trap cleanup INT
 
-function main {
-  # Delay so the light is completely turned on when a photo is taken
-  sleep 2
-
-  # Take image
-  take_photo $CAM_DELAY $(pwd)/$1 $RES_W $RES_H
-
-  echo "Captured: ${FILE_NAME}"
-
-  IDX=$((IDX + 1))
-
-  sleep 2
-
-  if [ -n "$S3_BUCKET_ENDPOINT" ]
-  then
-    add_image_to_s3 $S3_BUCKET_ENDPOINT $1
-  fi
-
-  analyze_image "examine_single_file.py" $(pwd)/$1
-
-  sleep $SLEEP_DELAY
-}
-
-while true; do
+while true
+do
   FOLDER_FILE_NAME=$(create_image_folder ${IDX})
 
   if [ -n "$LIGHT_ON_ENDPOINT" ] && [ -n "$LIGHT_OFF_ENDPOINT" ] 
@@ -54,7 +32,7 @@ while true; do
     if [ $ON_STATUS -eq 200 ]
     then
       echo "Light turned on"
-      main $FOLDER_FILE_NAME
+      run_main_sourdough $FOLDER_FILE_NAME
 
       # Turn light off
       OFF_STATUS=$(turn_light_off ${LIGHT_OFF_ENDPOINT})
@@ -62,6 +40,6 @@ while true; do
       echo "Light did not turn on"
     fi
   else
-    main $FOLDER_FILE_NAME
+    run_main_sourdough $FOLDER_FILE_NAME
   fi
 done
