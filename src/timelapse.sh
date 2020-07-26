@@ -4,19 +4,11 @@
 
 source ./helpers.sh
 
-export_env_var ../.env
-
 # Create image root folder if not exist
 mkdir -p imgs 
 
 # Set initial image index
 IDX=0 
-
-# Calculate width resolution (RES_W : RES_H = 1.33)
-RES_W=$(($RES_H * 133 / 100))
-
-# Calculate the total delay time per cycle
-SLEEP_DELAY=$(($TOTAL_DELAY - $CAM_DELAY))
 
 trap cleanup INT
 
