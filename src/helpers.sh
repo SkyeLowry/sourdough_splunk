@@ -4,7 +4,21 @@ function export_env_var {
   if [ -f $1 ] 
   then
     export $(cat $1 | sed 's/#.*//g' | xargs)
+  else
+    echo "'.env' file doesn't exist in src folder. Use '.env.example' to create '.env'."
+    exit 1
   fi
+
+  REQUIRED_ENV_VARS=( "$TOTAL_DELAY" "$CAM_DELAY" "$RES_H" )
+
+  for var in "${REQUIRED_ENV_VARS[@]}"
+  do
+    if [ -z "$var" ]
+    then
+      echo "Required env variable(s) missing. Check src/.env file."
+      return
+    fi
+  done
 }
 
 function cleanup {
@@ -13,10 +27,7 @@ function cleanup {
 }
 
 function take_photo {
-  # $1: Delay in seconds
-  # $2: Full image filename
-  # $3: Width resolution
-  # $4: Height resolution
+  # $1: Full image filename
   # raspistill reference: https://www.raspberrypi.org/documentation/usage/camera/raspicam/raspistill.md
 
   raspistill --nopreview -t $CAM_DELAY -o $1 -w $RES_W -h $RES_H
@@ -39,14 +50,13 @@ function create_image_folder {
 }
 
 function add_image_to_s3 {
-  # $2: Image folder + file name
+  # $1: Image folder + file name
   
   aws s3 cp $(pwd)/$1 $S3_BUCKET_ENDPOINT/$1
 }
 
 function analyze_image {  
   # $1: Python file to run
-  # $2: Full image name
 
   source $(pwd)/env/bin/activate
 
