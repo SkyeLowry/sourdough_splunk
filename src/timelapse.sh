@@ -4,6 +4,8 @@
 
 source ./helpers.sh
 
+export_env_var ../.env
+
 # Create image root folder if not exist
 mkdir -p imgs 
 
@@ -28,6 +30,20 @@ do
 
       # Turn light off
       OFF_STATUS=$(turn_light_off)
+
+      if [ $OFF_STATUS -eq 200 ]
+      then
+        echo "Light turned off"
+      else 
+        echo "Light did not turn off"
+      fi 
+      
+      # Calculate the total delay time per cycle
+      SLEEP_DELAY=$(($TOTAL_DELAY - $CAM_DELAY))
+
+      echo "Sleeping for $SLEEP_DELAY seconds"
+
+      sleep $SLEEP_DELAY
     else
       echo "Light did not turn on"
     fi

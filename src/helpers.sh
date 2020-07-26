@@ -1,5 +1,3 @@
-export_env_var ../.env
-
 function export_env_var {
   # $1: `.env` file directory
 
@@ -103,9 +101,4 @@ function run_main_sourdough {
   fi
 
   analyze_image $(pwd)/$1
-
-  # Calculate the total delay time per cycle
-  SLEEP_DELAY=$(($TOTAL_DELAY - $CAM_DELAY))
-
-  sleep $SLEEP_DELAY
 }
