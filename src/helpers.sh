@@ -30,6 +30,9 @@ function take_photo {
   # $1: Full image filename
   # raspistill reference: https://www.raspberrypi.org/documentation/usage/camera/raspicam/raspistill.md
 
+  # Calculate width resolution (RES_W : RES_H = 1.33)
+  RES_W=$(($RES_H * 133 / 100))
+
   raspistill --nopreview -t $CAM_DELAY -o $1 -w $RES_W -h $RES_H
 }
 
@@ -98,6 +101,4 @@ function run_main_sourdough {
   fi
 
   analyze_image $(pwd)/$1
-
-  sleep $SLEEP_DELAY
 }

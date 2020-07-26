@@ -12,12 +12,6 @@ mkdir -p imgs
 # Set initial image index
 IDX=0 
 
-# Calculate width resolution (RES_W : RES_H = 1.33)
-RES_W=$(($RES_H * 133 / 100))
-
-# Calculate the total delay time per cycle
-SLEEP_DELAY=$(($TOTAL_DELAY - $CAM_DELAY))
-
 trap cleanup INT
 
 while true
@@ -36,6 +30,20 @@ do
 
       # Turn light off
       OFF_STATUS=$(turn_light_off)
+
+      if [ $OFF_STATUS -eq 200 ]
+      then
+        echo "Light turned off"
+      else 
+        echo "Light did not turn off"
+      fi 
+      
+      # Calculate the total delay time per cycle
+      SLEEP_DELAY=$(($TOTAL_DELAY - $CAM_DELAY))
+
+      echo "Sleeping for $SLEEP_DELAY seconds"
+
+      sleep $SLEEP_DELAY
     else
       echo "Light did not turn on"
     fi
