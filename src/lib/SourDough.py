@@ -1,4 +1,11 @@
 import re
+import os
+
+import datetime as dtime
+from datetime import datetime
+
+import pytz
+from tzlocal import get_localzone
 
 from skimage import io
 from skimage.filters import threshold_li, try_all_threshold
@@ -6,11 +13,74 @@ from skimage.measure import label, regionprops
 
 import matplotlib.pyplot as plt
 
-class ImageProcessor():
-  def __init__(self, file_name):
-    self.file_name = file_name
-    self.file_index = self.__get_file_index()
-    self.img = io.imread(self.file_name, as_gray=True)
+class ImageFileUtil():
+  def __init__(self, current_py_dir, sys_argv, log_file_name):
+    self._current_py_dir = current_py_dir
+    self._sys_argv = sys_argv
+    self._log_file_name = log_file_name
+
+    if not os.path.isfile(self.full_img_file_name):
+      raise Exception(self.full_img_file_name + ' does not exist!')
+
+    if not os.path.isfile(self.full_log_file_name):
+      with open(self.full_log_file_name, 'w') as fp:
+        pass
+
+  @property
+  def img_folder_dir(self):
+    split_dir = self.full_img_file_name.split('/')
+    return split_dir[len(split_dir) - 2]
+  
+  @property
+  def img_file_name(self):
+    split_dir = self.full_img_file_name.split('/')
+    return split_dir[-1]
+
+  @property
+  def full_img_file_name(self):
+    return os.path.join(self._current_py_dir, self._sys_argv)
+  
+  @property
+  def full_log_file_name(self):
+    return os.path.join(self._current_py_dir, self._log_file_name)
+
+  @property
+  def utc_dt_from_file_name(self):
+    tz = get_localzone()
+
+    date, time, misc = self.img_file_name.split('_')
+
+    dt = dtime.datetime.strptime(date + time, '%Y-%m-%d%H-%M-%S')
+
+    local_dt = tz.localize(dt, is_dst=True)
+
+    return local_dt.astimezone(pytz.utc)
+
+  def log_result(self, log_array):
+    string_array = [str(x) for x in log_array]
+
+    joined_string = ','.join(string_array)
+
+    if os.path.isfile(self.full_log_file_name):
+      file = open(self.full_log_file_name, 'a')
+
+      file.write(joined_string + '\n')
+
+      file.close()
+    else:
+      with open(self.full_log_file_name, 'w') as fp:
+        pass
+
+
+class ImageProcessor(ImageFileUtil):
+  def __init__(self, imageFileUtil):
+    super().__init__(
+      current_py_dir=imageFileUtil._current_py_dir,
+      sys_argv=imageFileUtil._sys_argv,
+      log_file_name=imageFileUtil._log_file_name
+    )
+
+    self.img = io.imread(self.full_img_file_name, as_gray=True)
     self.default_crop_area = [0, 3000, 500, 1200]
     self.default_min_area = 20000
     self.height = None
@@ -18,11 +88,6 @@ class ImageProcessor():
     # Region analysis results when area is > min_area
     self.bounds = [] 
     
-  def __get_file_index(self):
-    index_reg = re.match(r".*\((\d+)\)\.jpg$", self.file_name)
-
-    return index_reg.group(1)
-
   def load_image(self, crop_area=None, download_img=False):
     if crop_area is None:
       crop_area = self.default_crop_area 
@@ -106,7 +171,7 @@ class ImageProcessor():
     else:
       current_size = abs(max_height - height)
 
-    return (self.file_index, self.file_name.split('/')[-1], current_size, max_height)
+    return (self.img_file_name, current_size, max_height)
 
   def __crop_image(self, crop_area):
     try:
