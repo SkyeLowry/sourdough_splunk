@@ -27,7 +27,7 @@ do
   if [ -n "$LIGHT_ON_ENDPOINT" ] && [ -n "$LIGHT_OFF_ENDPOINT" ] 
   then
     # Turn light on
-    ON_STATUS=$(turn_light_on ${LIGHT_ON_ENDPOINT})
+    ON_STATUS=$(turn_light_on)
 
     if [ $ON_STATUS -eq 200 ]
     then
@@ -35,7 +35,7 @@ do
       run_main_sourdough $FOLDER_FILE_NAME
 
       # Turn light off
-      OFF_STATUS=$(turn_light_off ${LIGHT_OFF_ENDPOINT})
+      OFF_STATUS=$(turn_light_off)
     else
       echo "Light did not turn on"
     fi

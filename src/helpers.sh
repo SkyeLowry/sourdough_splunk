@@ -19,7 +19,7 @@ function take_photo {
   # $4: Height resolution
   # raspistill reference: https://www.raspberrypi.org/documentation/usage/camera/raspicam/raspistill.md
 
-  raspistill --nopreview -t $1 -o $2 -w $3 -h $4
+  raspistill --nopreview -t $CAM_DELAY -o $1 -w $RES_W -h $RES_H
 }
 
 function create_image_folder {
@@ -41,7 +41,7 @@ function create_image_folder {
 function add_image_to_s3 {
   # $2: Image folder + file name
   
-  aws s3 cp $(pwd)/$2 $1/$2
+  aws s3 cp $(pwd)/$1 $S3_BUCKET_ENDPOINT/$1
 }
 
 function analyze_image {  
@@ -50,7 +50,7 @@ function analyze_image {
 
   source $(pwd)/env/bin/activate
 
-  python $(pwd)/$1 $2
+  python $(pwd)/examine_single_file.py $1
 
   echo "Python closed."
 
@@ -58,13 +58,13 @@ function analyze_image {
 }
 
 function turn_light_on {
-  ON_STATUS="$(curl -I ${1} | head -n 1 | cut -d$' ' -f2)"
+  ON_STATUS="$(curl -I ${LIGHT_ON_ENDPOINT} | head -n 1 | cut -d$' ' -f2)"
 
   echo $ON_STATUS
 }
 
 function turn_light_off {
-  OFF_STATUS="$(curl -I ${1} | head -n 1 | cut -d$' ' -f2)"
+  OFF_STATUS="$(curl -I ${LIGHT_OFF_ENDPOINT} | head -n 1 | cut -d$' ' -f2)"
 
   echo $OFF_STATUS
 }
@@ -74,9 +74,9 @@ function run_main_sourdough {
   sleep 2
 
   # Take image
-  take_photo $CAM_DELAY $(pwd)/$1 $RES_W $RES_H
+  take_photo $(pwd)/$1
 
-  echo "Captured: ${$1}"
+  echo "Captured: ${1}"
 
   IDX=$((IDX + 1))
 
@@ -84,10 +84,10 @@ function run_main_sourdough {
 
   if [ -n "$S3_BUCKET_ENDPOINT" ]
   then
-    add_image_to_s3 $S3_BUCKET_ENDPOINT $1
+    add_image_to_s3 $1
   fi
 
-  analyze_image "examine_single_file.py" $(pwd)/$1
+  analyze_image $(pwd)/$1
 
   sleep $SLEEP_DELAY
 }
