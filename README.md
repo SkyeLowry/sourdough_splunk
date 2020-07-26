@@ -16,6 +16,8 @@ An image processor that uses a Raspberry Pi to monitor a sourdough starter in Sp
 
 - Raspberry Pi
 
+  - How test camera?
+    Go to `src` folder and run the following command: `. take_photo.sh`
 - Splunk Universal Forwarder
 
 ### Optional setup
