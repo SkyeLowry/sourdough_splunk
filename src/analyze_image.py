@@ -1,5 +1,7 @@
 import sys
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 from lib.SourDough import ImageFileUtil, ImageProcessor
 
@@ -25,7 +27,10 @@ while True:
 
   crop_area = ini_height_range + width_slice
 
-  file_name, current_size, max_height = ip.analyze_image(crop_area=crop_area)
+  file_name, current_size, max_height = ip.analyze_image(
+    method_name=os.getenv('IMAGE_PROCESS_METHOD'),
+    crop_area=crop_area
+  )
 
   left_edge = width_slice[1]
 

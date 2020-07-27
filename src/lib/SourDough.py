@@ -7,23 +7,22 @@ from datetime import datetime
 import pytz
 from tzlocal import get_localzone
 
-from skimage import io
-from skimage.filters import threshold_li, try_all_threshold
+from skimage import io, filters, measure
 from skimage.measure import label, regionprops
 
 import matplotlib.pyplot as plt
 
 class ImageFileUtil():
   def __init__(self, current_py_dir, sys_argv, log_file_name):
-    self._current_py_dir = current_py_dir
-    self._sys_argv = sys_argv
-    self._log_file_name = log_file_name
+    self.current_py_dir = current_py_dir
+    self.sys_argv = sys_argv
+    self.log_file_name = log_file_name
 
     if not os.path.isfile(self.full_img_file_name):
       raise Exception(self.full_img_file_name + ' does not exist!')
 
-    if not os.path.isfile(self.full_log_file_name):
-      with open(self.full_log_file_name, 'w') as fp:
+    if not os.path.isfile(self.full__log_file_name):
+      with open(self.full__log_file_name, 'w') as fp:
         pass
 
   @property
@@ -38,11 +37,11 @@ class ImageFileUtil():
 
   @property
   def full_img_file_name(self):
-    return os.path.join(self._current_py_dir, self._sys_argv)
+    return os.path.join(self.current_py_dir, self.sys_argv)
   
   @property
-  def full_log_file_name(self):
-    return os.path.join(self._current_py_dir, self._log_file_name)
+  def full__log_file_name(self):
+    return os.path.join(self.current_py_dir, self.log_file_name)
 
   @property
   def utc_dt_from_file_name(self):
@@ -61,23 +60,23 @@ class ImageFileUtil():
 
     joined_string = ','.join(string_array)
 
-    if os.path.isfile(self.full_log_file_name):
-      file = open(self.full_log_file_name, 'a')
+    if os.path.isfile(self.full__log_file_name):
+      file = open(self.full__log_file_name, 'a')
 
       file.write(joined_string + '\n')
 
       file.close()
     else:
-      with open(self.full_log_file_name, 'w') as fp:
+      with open(self.full__log_file_name, 'w') as fp:
         pass
 
 
 class ImageProcessor(ImageFileUtil):
   def __init__(self, imageFileUtil):
     super().__init__(
-      current_py_dir=imageFileUtil._current_py_dir,
-      sys_argv=imageFileUtil._sys_argv,
-      log_file_name=imageFileUtil._log_file_name
+      current_py_dir=imageFileUtil.current_py_dir,
+      sys_argv=imageFileUtil.sys_argv,
+      log_file_name=imageFileUtil.log_file_name
     )
 
     self.img = io.imread(self.full_img_file_name, as_gray=True)
@@ -87,32 +86,38 @@ class ImageProcessor(ImageFileUtil):
     
     # Region analysis results when area is > min_area
     self.bounds = [] 
-    
-  def load_image(self, crop_area=None, download_img=False):
+
+  def get_all_threshold_images(self):
+    # All binary image set
+    fig_all, ax_all = filters.try_all_threshold(self.img, figsize=(10, 8), verbose=False)
+
+    plt.savefig('imgs/all_binary_images.png')
+
+    print('all_binary_images.png saved in imgs folder')
+
+  def get_a_threshold_image(self, method_name, crop_area=None):
     if crop_area is None:
       crop_area = self.default_crop_area 
       
     # crop image to zoom in to jar
     img_cropped = self.__crop_image(crop_area)   
-    binary_img = self.__get_binary_image(img_cropped)
+    binary_img = self.__get_binary_image(
+      image=img_cropped, 
+      method_name=method_name
+    )
 
-    if download_img:
-      # All binary image set
-      fig_all, ax_all = try_all_threshold(self.img, figsize=(10, 8), verbose=False)
-      plt.savefig('all_binary_images.png')
-      print('all_binary_images.png generated!')
+    fig, ax = plt.subplots(ncols=2)
 
-      fig, ax = plt.subplots(ncols=2)
-      # Cropped image
-      ax[0].imshow(img_cropped, cmap=plt.cm.gray)
-      ax[0].set_title('Cropped Image')
+    # Cropped image
+    ax[0].imshow(img_cropped, cmap='gray')
+    ax[0].set_title('Cropped Image')
 
-      # Li filtered image
-      ax[1].imshow(binary_img, cmap=plt.cm.gray)
-      ax[1].set_title('Binary Image by Li Filter')
+    # Filtered image
+    ax[1].imshow(binary_img, cmap='gray')
+    ax[1].set_title('Binary Image by %s filter' % method_name)
 
-      plt.savefig('image_analysis.png')
-      print('image_analysis.png generated!')
+    plt.savefig('imgs/binary_image_by_%s.png' % method_name)
+    print('imgs/binary_image_by_%s.png saved in imgs folder' % method_name)
 
     return binary_img
 
@@ -133,7 +138,7 @@ class ImageProcessor(ImageFileUtil):
 
   def get_height_graph(self, binary_img):
     fix, ax = plt.subplots()
-    ax.imshow(binary_img, cmap=plt.cm.gray)
+    ax.imshow(binary_img, cmap='gray')
 
     for bound in self.bounds:
       y0, x0 = bound['centroid']
@@ -148,7 +153,7 @@ class ImageProcessor(ImageFileUtil):
 
     return plt
     
-  def analyze_image(self, crop_area=None, min_area=None):
+  def analyze_image(self, method_name, crop_area=None, min_area=None):
     if crop_area is None:
       crop_area = self.default_crop_area
     
@@ -157,7 +162,7 @@ class ImageProcessor(ImageFileUtil):
     
     # crop image to zoom in to jar
     img_cropped = self.__crop_image(crop_area)   
-    binary_img = self.__get_binary_image(img_cropped)
+    binary_img = self.__get_binary_image(image=img_cropped, method_name=method_name)
 
     height = self.get_height(binary_img)
     max_height, max_width = binary_img.shape
@@ -179,8 +184,27 @@ class ImageProcessor(ImageFileUtil):
     except ValueError:
       print('---')
 
-  def __get_binary_image(self, image):
-    thresh = threshold_li(image)
+  def __get_binary_image(self, image, method_name):
+    allowed_methods=[
+      'threshold_otsu',
+      'threshold_yen',
+      'threshold_isodata',
+      'threshold_li',
+      'threshold_local',
+      'threshold_minimum',
+      'threshold_mean',
+      'threshold_niblack',
+      'threshold_sauvola',
+      'threshold_triangle',
+      'threshold_multiotsu',
+    ]
+
+    if method_name not in allowed_methods:
+      raise ValueError('Invalid method name, Expected one of: %s' % allowed_methods)
+    
+    threshold_method = getattr(filters, method_name)
+
+    thresh = threshold_method(image)
 
     return image < thresh
 
