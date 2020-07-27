@@ -63,7 +63,7 @@ function analyze_image {
 
   source $(pwd)/env/bin/activate
 
-  python $(pwd)/examine_single_file.py $1
+  python $(pwd)/analyze_image.py $1
 
   echo "Python closed."
 
