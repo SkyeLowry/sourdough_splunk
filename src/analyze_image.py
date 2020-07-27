@@ -6,7 +6,7 @@ load_dotenv()
 from lib.SourDough import ImageFileUtil, ImageProcessor
 
 if len(sys.argv) is 1:
-    raise Exception('Please add a filename as an argument!')
+  raise Exception('Please add a filename as an argument!')
 
 # Image variables
 ini_height_range = [0, 3000]
